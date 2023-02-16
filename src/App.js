@@ -49,6 +49,28 @@ function Create(props){
     </form>
   </article>
 }
+function Update(props){
+  const [title,setTitle] = useState(props.title);
+  const [body,setBody] = useState(props.body);
+  return <article>
+    <h2>Update</h2>
+    <form onSubmit={event=>{
+      event.preventDefault();
+      const title = event.target.title.value;
+      const body = event.target.body.value;
+      props.onUpdate(title,body);
+    }}>
+      <p><input tpye="text" name="title" placeholder="title" value={title} onChange={event=>{
+        // console.log(event.target.value);
+        setTitle(event.target.value);
+      }}/></p>
+      <p><textarea tpye="text" name="body" placeholder="body" value={body} onChange={event=>{
+        setBody(event.target.value);
+      }}></textarea></p>
+      <p><input type="submit" value="Update"/></p>
+    </form>
+  </article>  
+}
 
 function App() {
   const [mode, setMode] = useState('welcome');
@@ -60,6 +82,7 @@ function App() {
     {id:3, title:'java', body:'java is ...'},
   ]);
   let content = null;
+  let contextControl = null;
   if(mode === 'welcome'){
     content = <Article title ="welcome" body="hello, web"></Article>
   }else if(mode === 'read'){
@@ -71,6 +94,11 @@ function App() {
       }
     }
     content =  <Article title ={a} body={b}></Article>
+    contextControl = <li><a href={'/Update'+id} onClick={event=>{
+      event.preventDefault();
+      setMode('update');
+    }}>Update</a></li>
+
   }else if(mode === 'create'){
     content =<Create onCreate={(_title, _body)=>{
       const newTopic = {id: nextId, title: _title, body: _body};
@@ -81,9 +109,29 @@ function App() {
       setId(nextId);
       setNextId(nextId+1);
     }}></Create>
+  }else if(mode === 'update'){
+    let a,b = null;
+    for(let i = 0; i<topics.length; i++){
+      if(topics[i].id === id){
+        a = topics[i].title;
+        b = topics[i].body;
+      }
+    }
+    content = <Update title={a} body={b} onUpdate={(_title,_body)=>{
+      // console.log(title,body);
+      const newTopics = [...topics];
+      const updatedTopic = {id:id, title:_title, body:_body};
+      for(let i = 0; i<newTopics.length; i++){
+        if(newTopics[i].id === id){
+          newTopics[i] = updatedTopic;
+          break;
+        }
+      }
+      setTopics(newTopics);
+      setMode('read');
+    
+    }}></Update>
   }
-
-
 
   return (
     <div>
@@ -95,10 +143,16 @@ function App() {
         setId(_id);
       }}></Nav>
       {content}
-      <a href="/Create" onClick={event=>{
-        event.preventDefault();
-        setMode('create');
-      }}>Create</a>
+      
+      <ul>
+      <li>
+        <a href="/Create" onClick={event=>{
+          event.preventDefault();
+          setMode('create');
+        }}>Create</a>
+      </li>
+      {contextControl}
+      </ul>
     </div>
   );
 }
